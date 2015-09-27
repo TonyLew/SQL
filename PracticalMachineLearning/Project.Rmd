@@ -1,0 +1,173 @@
+
+---
+title: "Practical Machine Learning Project"
+author: "Tony Lew"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+
+# Executive Summary
+
+This is a random forest model used to predict the quality of activity
+and the out of sample error for my model is 0.26% (see Figure 1 - ErrorRate Plot).
+The quality of activity is classified as one of the following: A B C D E
+where class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes.
+
+With a classification ranging from A to E (classe variable), I chose random forests as my model algorithm.
+Though there are many advantages to random forests, my motivating reasons are:
+
+It does not overfit. 
+It can run as many trees as you want. 
+It is fast.
+It is unexcelled in accuracy among current algorithms.
+It runs efficiently on large data bases.
+It can handle thousands of input variables without variable deletion.
+It gives estimates of what variables are important in the classification.
+It generates an internal unbiased estimate of the generalization error as the forest building progresses.
+It estimates cross validation internally, during the run.
+
+
+
+
+Special recognition goes to the following group who has made this dataset available from this website:
+
+http://groupware.les.inf.puc-rio.br/har
+
+Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements. Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6. 
+
+Read more: http://groupware.les.inf.puc-rio.br/har#dataset#ixzz3jexdk0ml
+
+
+
+# R Setup
+
+The libraries that must be loaded are here:
+```{r echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+  library(randomForest)
+  library(lattice);
+  library(ggplot2);
+  library(sqldf);
+
+```
+
+
+
+# Exploratory Data Analysis
+```{r echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+filedir <- "E:/Coursera/PracticalMachineLearningProject/"
+trainfile <- paste(filedir, "pml-training.csv", sep="") 
+train <- data.frame(read.csv(trainfile))
+testfile <- paste(filedir, "pml-testing.csv", sep="") 
+test <- data.frame(read.csv(testfile))
+```
+
+Looking at the data, the first several variables are unrelated to the testing we seek.  They are used as classification variables with X simply being a row identification variable since they are not computable variables as measurements are.  
+
+Specifically, they are:
+
+  X
+  user_name
+  raw_timestamp_part_1
+  raw_timestamp_part_2
+  cvtd_timestamp
+  new_window
+  num_window
+
+Also, a number of columns are mostly null or empty (about 98% of the time) which we should omit as well.  Since this revolves around the column new_window I was able to calculate this statistic.
+
+```{r echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+
+sqldf("
+      select 
+                x.new_window as emptycolumn,
+                COUNT(1) as total
+      from      train x
+      group by  x.new_window
+      ")
+
+```
+
+
+I have extracted the column names from our test data set to use for creating the subset of data.
+So a new subset of the original dataset has been created to omit these classification variables along with the empty columns from both the training and testing sets.
+```{r echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+trainsubset   <- sqldf("
+                        select 
+                                  roll_belt,pitch_belt,yaw_belt,total_accel_belt,
+                                  gyros_belt_x,gyros_belt_y,gyros_belt_z,
+                                  accel_belt_x,accel_belt_y,accel_belt_z,
+                                  magnet_belt_x,magnet_belt_y,magnet_belt_z,
+                                  roll_arm,pitch_arm,yaw_arm,total_accel_arm,
+                                  gyros_arm_x,gyros_arm_y,gyros_arm_z,
+                                  accel_arm_x,accel_arm_y,accel_arm_z,
+                                  magnet_arm_x,magnet_arm_y,magnet_arm_z,
+                                  roll_dumbbell,pitch_dumbbell,yaw_dumbbell,
+                                  gyros_dumbbell_x,gyros_dumbbell_y,gyros_dumbbell_z,
+                                  accel_dumbbell_x,accel_dumbbell_y,accel_dumbbell_z,
+                                  magnet_dumbbell_x,magnet_dumbbell_y,magnet_dumbbell_z,
+                                  roll_forearm,pitch_forearm,yaw_forearm,total_accel_forearm,
+                                  gyros_forearm_x,gyros_forearm_y,gyros_forearm_z,
+                                  accel_forearm_x,accel_forearm_y,accel_forearm_z,
+                                  magnet_forearm_x,magnet_forearm_y,magnet_forearm_z,
+                                  classe
+                        from      train x
+                        where     new_window = 'no'
+                      ")
+
+
+testsubset   <- sqldf("
+                        select 
+                                  roll_belt,pitch_belt,yaw_belt,total_accel_belt,
+                                  gyros_belt_x,gyros_belt_y,gyros_belt_z,
+                                  accel_belt_x,accel_belt_y,accel_belt_z,
+                                  magnet_belt_x,magnet_belt_y,magnet_belt_z,
+                                  roll_arm,pitch_arm,yaw_arm,total_accel_arm,
+                                  gyros_arm_x,gyros_arm_y,gyros_arm_z,
+                                  accel_arm_x,accel_arm_y,accel_arm_z,
+                                  magnet_arm_x,magnet_arm_y,magnet_arm_z,
+                                  roll_dumbbell,pitch_dumbbell,yaw_dumbbell,
+                                  gyros_dumbbell_x,gyros_dumbbell_y,gyros_dumbbell_z,
+                                  accel_dumbbell_x,accel_dumbbell_y,accel_dumbbell_z,
+                                  magnet_dumbbell_x,magnet_dumbbell_y,magnet_dumbbell_z,
+                                  roll_forearm,pitch_forearm,yaw_forearm,total_accel_forearm,
+                                  gyros_forearm_x,gyros_forearm_y,gyros_forearm_z,
+                                  accel_forearm_x,accel_forearm_y,accel_forearm_z,
+                                  magnet_forearm_x,magnet_forearm_y,magnet_forearm_z,
+                                  problem_id
+                        from      test x
+                        where     new_window = 'no'
+                      ")
+
+```
+
+
+
+# Regression Modeling Analysis
+
+So here is my prediction for the problem ids in the test data set.
+```{r echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+
+RFModel <- randomForest(formula=classe ~ .,
+                         data=trainsubset, na.action=na.omit, family='gaussian') 
+RFPredict <- predict(RFModel, newdata=testsubset, type="response")
+RFPredict
+
+```
+
+
+
+# Cross Validation
+
+As for cross validation, in random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally , during the run.
+
+
+
+# Figures
+
+### Figure 1 - ErrorRate Plot
+```{r echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+plot(RFModel, main='Error Rate Plot')
+```
+  
+
