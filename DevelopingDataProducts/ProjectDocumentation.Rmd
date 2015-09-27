@@ -1,0 +1,22 @@
+
+---
+title: "Developing Data Products Project Documentation"
+author: "Tony Lew"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+This website will calculate the total number of months it will take to pay off your mortgage with the amount of rent you are currently paying.
+
+Although this is an overly simple website, it can be built upon to create much more interesting graphs and statistics.
+
+The concept with the site is simply.  Enter the information for the house you would consider purchasing and the current rent you are paying.
+
+```{r echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+
+
+```
+
+
+  
+
