@@ -1,0 +1,65 @@
+Phrase Prediction
+========================================================
+author: Tony Lew
+date:   2016 January 25
+
+The case for customized phrase prediction
+
+Second Slide
+========================================================
+
+Since language is the expression of individuality, the 
+algorithm needs to allow for new words and identify the 
+common words and phrases used by the individual.
+
+Having a common base of vocabulary is a great start but
+as time progresses, language will deviate to express
+individuality.  If the algorithm will not accomodate 
+this then the prediction used will not be as useful to
+an individual.
+
+
+Third Slide
+========================================================
+
+The data for the algorithm used here was built from a 
+collection of news articles, blogs, and twitter feeds.  
+
+  - Out of curiosity, 5 of the most common words are:
+      1st,All,can,didn't,great
+
+Collectively, every word has been identified, tokenized,
+and incremented to rank each word's popularity.
+
+Additionally, every phrase from 2 to 4 words has also
+been identified and incremented (ranked).  Since the 
+words have already been tokenized, the phrases are 
+simply grouped and identified by the corresponding word 
+numbers.
+
+
+Fourth Slide
+========================================================
+
+Since the words are numbered (4 bytes), this algorithm
+is positioned to scale easily in both performance,
+design, and individuality.
+
+  - Individualized and flexible enough specifically made 
+    for a mobile, personal device.
+  - Accomodate new words such as acronyms and personal 
+    slang.  
+  - Space requirements are of minimal impact
+  - Longer phrases can be easily accomodated.
+  - Predicting the next phrase beyond 2 words is also
+    possible
+  - Easy to report on the most common words and phrases
+
+
+Fifth Slide
+========================================================
+
+Please try the app here:
+
+[https://tonylew.shinyapps.io/phrasepredictor/](https://tonylew.shinyapps.io/phrasepredictor/)
+
